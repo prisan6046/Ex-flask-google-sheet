@@ -7,25 +7,27 @@ scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/aut
 creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
 client = gspread.authorize(creds)
 sheet = client.open("Data name").sheet1
-data = sheet.get_all_records()
-
 
 ### web service
 from flask import Flask , jsonify, request
 app = Flask(__name__)
 
-def manageEmployee(name):
+def loadEmployee():
+    data = sheet.get_all_records()
+    listdata = pd.DataFrame(data)
+    return listdata
+
+def searchEmployee(name):
+    data = sheet.get_all_records()
     listdata = pd.DataFrame(data)
     employee = listdata[ listdata['Name'] == name ]
-    print(employee)
     return employee
 
-
 @app.route('/getEmployee' , methods=['GET'])
-def home():
+def getEmployee():
     try:
         name = request.args.get('name')
-        res = manageEmployee(name)
+        res = searchEmployee(name)
         msg = ''
         for i in range(len(res)):
             show = res.iloc[i]
@@ -35,29 +37,24 @@ def home():
 
         return jsonify({'message' : msg })
     except Exception as e:
-        print(e)
         return jsonify({'message' : 'error นะดูใหม่อีกที'})
 
-
-
+@app.route('/insertEmployee' , methods=['GET'])
+def InsertEmployee():
+    try:
+        name = request.args.get('name')
+        age = request.args.get('age')
+        position = request.args.get('position')
+        detail = request.args.get('detail')
+        tel = request.args.get('tel')
+        res = loadEmployee()
+        row = [ name , str(age) , position , detail , str(tel) ]
+        index = int(len(res)+2)
+        sheet.insert_row(row, index)
+        return jsonify({'message' : "เพิ่มสำเร็จ" })
+    except Exception as e:
+        return jsonify({'message' : 'error นะดูใหม่อีกที'})
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-#get_worksheet(0)
-
-# def loadData():
-#     list_of_hashes = sheet.get_all_records()
-#     return list_of_hashes
-
-# def insert():
-#     row = ["คุณบอม" , "30" , "PM" , "ดูงานอย่างเดียว"]
-#     index = 2
-#     sheet.insert_row(row, index)
-
-# def update():
-#     sheet.update_cell(2, 1, "บิ๊ก")
-
-# def delete():
-#     sheet.delete_row(2)
