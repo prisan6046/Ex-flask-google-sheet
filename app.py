@@ -1,5 +1,6 @@
 ## google sheet
 import geopy.distance as ps
+import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
@@ -7,19 +8,31 @@ creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', s
 client = gspread.authorize(creds)
 sheet = client.open("Data name").sheet1
 data = sheet.get_all_records()
-print(data)
+
 
 ### web service
 from flask import Flask , jsonify, request
 app = Flask(__name__)
 
+def manageEmployee(name):
+    listdata = pd.DataFrame(data)
+    employee = listdata[ listdata['Name'] == name  ]
+    return employee
+
+
 @app.route('/getEmployee' , methods=['GET'])
 def home():
     try:
         name = request.args.get('name')
-        return jsonify({'message' : name + ' ส่ง api ไปแล้วนะ ทดสอบๆ'})
-    except:
+        res = manageEmployee(name)
+        return jsonify({'message' : 'เบอร์โทรคุณ : '+name+' คือ ' + str(res['tel'][0]) })
+    except Exception as e:
+        print(e)
         return jsonify({'message' : 'error นะดูใหม่อีกที'})
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
