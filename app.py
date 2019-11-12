@@ -16,7 +16,8 @@ app = Flask(__name__)
 
 def manageEmployee(name):
     listdata = pd.DataFrame(data)
-    employee = listdata[ listdata['Name'] == name  ]
+    employee = listdata[ listdata['Name'] == name ]
+    print(employee)
     return employee
 
 
@@ -25,7 +26,14 @@ def home():
     try:
         name = request.args.get('name')
         res = manageEmployee(name)
-        return jsonify({'message' : 'เบอร์โทรคุณ : '+name+' คือ ' + str(res['tel'][0]) })
+        msg = ''
+        for i in range(len(res)):
+            show = res.iloc[i]
+            msg = msg + "เบอร์คุณ "+show['Name']+" เบอร์โทร "+ str(show['tel']) + "\n"
+        if msg == '':
+            msg = "ไม่มีคนที่คุณค้นหา"
+
+        return jsonify({'message' : msg })
     except Exception as e:
         print(e)
         return jsonify({'message' : 'error นะดูใหม่อีกที'})
